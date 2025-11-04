@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>DailyQuest — Gamified Habit Tracker</title>
+  <style>
+    :root {
+      --bg: #0f1220;
+      --card: #171a2b;
+      --muted: #8890a6;
+      --text: #e7ebff;
+      --accent: #6c8bff;
+      --good: #3ddc97;
+      --warn: #ffb020;
+      --danger: #ff6b6b;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial;
+      background: radial-gradient(1200px 800px at 80% -10%, #1b1f36 0%, var(--bg) 40%, #0d101e 100%);
+      color: var(--text);
+    }
+    .container { max-width: 1000px; margin: 0 auto; padding: 20px; }
+    header {
+      display: grid; gap: 12px; align-items: center; grid-template-columns: 1fr; margin-bottom: 16px;
+    }
+    .title { font-weight: 800; letter-spacing: .5px; font-size: clamp(22px, 3vw, 34px); }
+    .subtitle { color: var(--muted); font-size: 14px; }
+
+    .hud { display: grid; gap: 12px; grid-template-columns: 1fr; }
+    @media (min-width: 700px) { .hud { grid-template-columns: 1fr auto; } }
+
+    .xpbar { background: #0a0d1a; border: 1px solid #2b3154; border-radius: 14px; padding: 10px 12px; box-shadow: 0 8px 30px rgba(0,0,0,.2) inset; }
+    .xpbar-top { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+    .bar {
+      width: 100%; height: 12px; border-radius: 999px; background: #0d1228; overflow: hidden; outline: 1px solid #2b3154;
+    }
+    .bar > span { display: block; height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent), #9aaaff); transition: width .35s ease; }
+
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+    .chip { background: #111428; border: 1px solid #2b3154; padding: 6px 10px; border-radius: 999px; font-size: 12px; color: var(--muted); }
+
+    .panel { background: #0f1430; border: 1px solid #2b3154; border-radius: 16px; padding: 14px; }
+
+    form.add {
+      display: grid; grid-template-columns: 70px 1fr 110px 120px; gap: 10px; align-items: center; margin-top: 8px;
+    }
+    @media (max-width: 640px) { form.add { grid-template-columns: 60px 1fr 110px; } .hidden-mobile { display: none; } }
+    input, button, select {
+      height: 40px; border-radius: 10px; border: 1px solid #2b3154; background: #0b0f24; color: var(--text);
+      padding: 0 12px; font-size: 14px; outline: none;
+    }
+    input::placeholder { color: #738;
+      color: #7383aa; }
+    input[type="color"] { padding: 0; }
+    button { cursor: pointer; border: 1px solid #334083; background: linear-gradient(180deg, #1a2150, #111640); box-shadow: 0 6px 16px rgba(15, 30, 80, .35); }
+    button:hover { filter: brightness(1.1); }
+
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin-top: 12px; }
+
+    .card { position: relative; background: var(--card); border: 1px solid #2b3154; border-radius: 16px; padding: 14px; box-shadow: 0 10px 30px rgba(0,0,0,.25); overflow: hidden; }
+    .card .top { display: flex; gap: 10px; align-items: center; justify-content: space-between; }
+    .left { display: flex; align-items: center; gap: 10px; }
+    .icon { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; font-size: 20px; background: #121737; border: 1px solid #2b3154; }
+    .name { font-weight: 700; }
+    .muted { color: var(--muted); font-size: 12px; }
+
+    .streak { display: inline-flex; align-items: center; gap: 6px; background: #111428; border: 1px solid #2b3154; padding: 4px 8px; border-radius: 999px; font-size: 12px; color: var(--muted); }
+
+    .complete {
+      height: 38px; min-width: 110px; padding: 0 12px; border-radius: 10px; font-weight: 700; border: 1px solid #244e2b; background: linear-gradient(180deg, #0d2f16, #0a1f0f); color: #bdfad4;
+    }
+    .complete.done { border-color: #3950a3; background: linear-gradient(180deg, #13215a, #0c163d); color: #a4b8ff; }
+
+    .footer { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+    .ghost { background: #0b0f24; border: 1px dashed #334083; color: var(--muted); }
+
+    .danger { background: linear-gradient(180deg, #3b0f0f, #250909); border-color: #7a1b1b; color: #ffb7b7; }
+    .success { background: linear-gradient(180deg, #10341f, #0d2215); border-color: #235f37; color: #bdfad4; }
+
+    .tiny { font-size: 11px; color: var(--muted); }
+    .right { text-align: right; }
+
+    .row { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="title">DailyQuest <span class="tiny">— Gamified Habit Tracker</span></div>
+      <div class="hud">
+        <div class="xpbar">
+          <div class="xpbar-top">
+            <div>Level <b id="level">1</b></div>
+            <div><span id="xp">0</span> XP • Next level in <span id="toNext">100</span> XP</div>
+          </div>
+          <div class="bar"><span id="xpFill"></span></div>
+          <div class="chips" id="badges"></div>
+        </div>
+        <div class="right">
+          <button id="exportBtn" class="ghost">Export backup</button>
+          <label for="importFile" class="ghost" style="display:inline-grid;place-items:center;padding:0 12px;height:40px;border-radius:10px;cursor:pointer;">Import backup</label>
+          <input id="importFile" type="file" accept="application/json" style="display:none" />
+        </div>
+      </div>
+    </header>
+
+    <section class="panel">
+      <div class="row">
+        <div>
+          <div class="name">Add a habit</div>
+          <div class="muted">Use an emoji as your icon (e.g., 🔥, 💧, 📚). Color is optional.</div>
+        </div>
+      </div>
+      <form class="add" id="addForm">
+        <input id="icon" placeholder="🔥" maxlength="3" />
+        <input id="name" placeholder="e.g., Read 10 pages" required />
+        <input id="color" type="color" value="#6c8bff" class="hidden-mobile" />
+        <button>Add habit</button>
+      </form>
+    </section>
+
+    <section class="grid" id="grid"></section>
+
+    <div class="footer">
+      <button id="resetToday" class="ghost">Reset today's completions</button>
+      <button id="clearAll" class="danger">Delete ALL data</button>
+    </div>
+
+    <p class="tiny">Data is saved only on this device using localStorage. To sync across devices, export/import the backup JSON or connect a backend later.</p>
+  </div>
+
+  <script>
+    // ---------- Utilities ----------
+    const $ = (sel, root=document) => root.querySelector(sel);
+    const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
+
+    function todayISO() {
+      const d = new Date();
+      d.setHours(0,0,0,0);
+      const y = d.getFullYear();
+      const m = String(d.getMonth()+1).padStart(2,'0');
+      const da = String(d.getDate()).padStart(2,'0');
+      return `${y}-${m}-${da}`;
+    }
+    function addDays(iso, days) {
+      const [y,m,d] = iso.split('-').map(Number);
+      const dt = new Date(y, m-1, d);
+      dt.setDate(dt.getDate()+days);
+      return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
+    }
+    function yesterdayISO() { return addDays(todayISO(), -1); }
+
+    // ---------- Storage ----------
+    const KEY = 'habitquest_v1';
+    const defaultState = () => ({
+      createdAt: todayISO(),
+      lastOpenDate: todayISO(),
+      xp: 0,
+      level: 1,
+      badges: [],
+      habits: []
+    });
+
+    function load() {
+      try {
+        const raw = localStorage.getItem(KEY);
+        return raw ? JSON.parse(raw) : defaultState();
+      } catch (e) { console.error(e); return defaultState(); }
+    }
+    function save() { localStorage.setItem(KEY, JSON.stringify(state)); }
+
+    let state = load();
+
+    // ---------- Daily rollover ----------
+    function rolloverIfNewDay() {
+      const t = todayISO();
+      if (state.lastOpenDate !== t) {
+        const yest = yesterdayISO();
+        for (const h of state.habits) {
+          // break streak if you missed yesterday
+          if (h.lastCompletedDate && h.lastCompletedDate !== t && h.lastCompletedDate !== yest) {
+            h.streak = 0;
+          }
+          h.completedToday = false;
+        }
+        state.lastOpenDate = t;
+        save();
+      }
+    }
+
+    // ---------- XP/Level/Badges ----------
+    function addXP(amount) {
+      state.xp += amount;
+      const before = state.level;
+      state.level = Math.floor(state.xp / 100) + 1;
+      if (!state.badges.includes('First Step') && state.xp > 0) {
+        state.badges.push('First Step');
+      }
+      if (state.level > before) {
+        toast(`Level up! You reached Level ${state.level} ✨`);
+      }
+    }
+
+    function maybeAwardStreakBadges(habit) {
+      if (habit.streak === 7 && !state.badges.includes('7-Day Streak')) state.badges.push('7-Day Streak');
+      if (habit.streak === 30 && !state.badges.includes('30-Day Streak')) state.badges.push('30-Day Streak');
+    }
+
+    // ---------- Rendering ----------
+    const grid = $('#grid');
+    function render() {
+      // HUD
+      $('#level').textContent = state.level;
+      $('#xp').textContent = state.xp;
+      const toNext = 100 - (state.xp % 100);
+      $('#toNext').textContent = toNext === 100 ? 0 : toNext;
+      $('#xpFill').style.width = `${(state.xp % 100)}%`;
+      const badges = state.badges.map(b => `<span class="chip">🏅 ${b}</span>`).join('');
+      $('#badges').innerHTML = badges || '<span class="chip">No badges yet — let\'s earn some!</span>';
+
+      // Habits
+      if (!state.habits.length) {
+        grid.innerHTML = `<div class="card">
+          <div class="muted">No habits yet. Add one above — examples: 🧘‍♂️ Meditate 5 mins, 💧 Drink 8 cups water, 📚 Read 10 pages.</div>
+        </div>`;
+        return;
+      }
+
+      grid.innerHTML = state.habits.map(h => {
+        const done = !!h.completedToday;
+        const btnClass = done ? 'complete done' : 'complete';
+        const streak = h.streak || 0;
+        const color = h.color || '#121737';
+        return `<div class="card" data-id="${h.id}">
+          <div class="top">
+            <div class="left">
+              <div class="icon" style="background:${color}22;border-color:${color}99">${h.icon || '🎯'}</div>
+              <div>
+                <div class="name">${escapeHtml(h.name)}</div>
+                <div class="muted">${done ? 'Completed today ✓' : 'Not done yet'} • <span class="streak">🔥 ${streak} day${streak===1?'':'s'} streak</span></div>
+              </div>
+            </div>
+            <div style="display:flex; gap:8px;">
+              <button class="${btnClass}">${done ? 'Completed' : '+10 XP'}</button>
+              <button class="ghost editBtn">Edit</button>
+              <button class="ghost danger delBtn">Delete</button>
+            </div>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    function escapeHtml(str='') { return str.replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[s])); }
+
+    // ---------- Interactions ----------
+    $('#addForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const name = $('#name').value.trim();
+      if (!name) return;
+      const icon = $('#icon').value.trim() || '🎯';
+      const color = $('#color').value || '#6c8bff';
+      const habit = { id: crypto.randomUUID(), name, icon, color, streak: 0, lastCompletedDate: null, completedToday: false };
+      state.habits.unshift(habit);
+      save();
+      $('#name').value = '';
+      render();
+      toast('Habit added ✓');
+    });
+
+    grid.addEventListener('click', (e) => {
+      const card = e.target.closest('.card');
+      if (!card) return;
+      const id = card.getAttribute('data-id');
+      const habit = state.habits.find(h => h.id === id);
+      if (!habit) return;
+
+      if (e.target.classList.contains('complete')) {
+        if (habit.completedToday) { toast('Already completed today. Come back tomorrow!'); return; }
+        habit.completedToday = true;
+        habit.streak = (habit.streak || 0) + 1;
+        habit.lastCompletedDate = todayISO();
+        addXP(10);
+        maybeAwardStreakBadges(habit);
+        save();
+        render();
+        confetti(card);
+        return;
+      }
+
+      if (e.target.classList.contains('delBtn')) {
+        if (!confirm('Delete this habit?')) return;
+        state.habits = state.habits.filter(h => h.id !== id);
+        save();
+        render();
+        toast('Habit deleted');
+        return;
+      }
+
+      if (e.target.classList.contains('editBtn')) {
+        const name = prompt('Rename habit:', habit.name) ?? habit.name;
+        const icon = prompt('Change icon (emoji):', habit.icon) ?? habit.icon;
+        const color = prompt('Change color (hex like #6c8bff):', habit.color) ?? habit.color;
+        habit.name = name.trim() || habit.name;
+        habit.icon = icon.trim() || habit.icon;
+        habit.color = /^#([0-9a-f]{3}){1,2}$/i.test(color) ? color : habit.color;
+        save();
+        render();
+        toast('Habit updated');
+      }
+    });
+
+    $('#resetToday').addEventListener('click', () => {
+      if (!confirm('Reset today\'s completions for all habits?')) return;
+      for (const h of state.habits) h.completedToday = false;
+      save();
+      render();
+      toast("Today's completions reset");
+    });
+
+    $('#clearAll').addEventListener('click', () => {
+      if (!confirm('This will DELETE all your habits and progress. Continue?')) return;
+      state = defaultState();
+      save();
+      render();
+      toast('All data cleared');
+    });
+
+    // Export/Import
+    $('#exportBtn').addEventListener('click', () => {
+      const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'habitquest-backup.json';
+      document.body.appendChild(a); a.click(); a.remove();
+      URL.revokeObjectURL(url);
+    });
+
+    $('#importFile').addEventListener('change', (e) => {
+      const file = e.target.files?.[0]; if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const json = JSON.parse(reader.result);
+          if (!json || typeof json !== 'object' || !Array.isArray(json.habits)) throw new Error('Invalid file');
+          state = json; save(); render(); toast('Backup imported ✓');
+        } catch (err) { alert('Could not import this file.'); }
+      };
+      reader.readAsText(file);
+    });
+
+    // ---------- Tiny UI helpers ----------
+    function toast(msg) {
+      const t = document.createElement('div');
+      t.textContent = msg;
+      t.style.position = 'fixed';
+      t.style.bottom = '16px';
+      t.style.left = '50%';
+      t.style.transform = 'translateX(-50%)';
+      t.style.background = '#111428';
+      t.style.border = '1px solid #2b3154';
+      t.style.padding = '10px 14px';
+      t.style.borderRadius = '999px';
+      t.style.fontSize = '13px';
+      t.style.color = 'var(--text)';
+      t.style.boxShadow = '0 10px 30px rgba(0,0,0,.35)';
+      document.body.appendChild(t);
+      setTimeout(()=> t.remove(), 1800);
+    }
+
+    function confetti(el) {
+      const rect = el.getBoundingClientRect();
+      for (let i=0; i<18; i++) {
+        const p = document.createElement('div');
+        p.style.position = 'fixed';
+        p.style.left = (rect.left + rect.width/2) + 'px';
+        p.style.top = (rect.top + 10) + 'px';
+        p.style.width = '6px'; p.style.height = '10px';
+        p.style.borderRadius = '2px';
+        p.style.background = `hsl(${Math.random()*360}, 90%, 60%)`;
+        p.style.opacity = '0.9';
+        p.style.transform = `translate(-50%, -50%) rotate(${Math.random()*360}deg)`;
+        document.body.appendChild(p);
+        const dx = (Math.random()*2-1) * 120; const dy = 120 + Math.random()*80; const rot = (Math.random()*720-360);
+        p.animate([
+          { transform: `translate(0,0) rotate(0deg)`, opacity: 1 },
+          { transform: `translate(${dx}px, ${dy}px) rotate(${rot}deg)`, opacity: 0 }
+        ], { duration: 900 + Math.random()*400, easing: 'cubic-bezier(.22,.68,0,1.71)' });
+        setTimeout(()=>p.remove(), 1300);
+      }
+    }
+
+    // ---------- Init ----------
+    rolloverIfNewDay();
+    render();
+  </script>
+</body>
+</html>
