@@ -15,22 +15,58 @@
       --warn: #ffb020;
       --danger: #ff6b6b;
     }
+
+    /* Light theme overrides when data-theme="light" on <html> */
+   [data-theme="light"] {
+  --bg: #ffffff;
+  --card: #ffffff;
+  --panel: #ffffff;
+
+  --muted: #5b5b5b;
+  --text: #000000;
+
+  --accent: #3556ff;
+  --good: #188a50;
+  --warn: #b36f00;
+  --danger: #b32b2b;
+
+  /* Light mode borders & shadows */
+  --border: #d9d9d9;
+  --shadow: 0 4px 14px rgba(0,0,0,0.08);
+}
+
+
     * { box-sizing: border-box; }
     html, body { height: 100%; }
     body {
       margin: 0;
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial;
-      background: radial-gradient(1200px 800px at 80% -10%, #1b1f36 0%, var(--bg) 40%, #0d101e 100%);
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      background: var(--bg);
       color: var(--text);
+      -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
     }
     .container { max-width: 1000px; margin: 0 auto; padding: 20px; }
+
+    /* Header layout - changed to accommodate hamburger */
     header {
-      display: grid; gap: 12px; align-items: center; grid-template-columns: 1fr; margin-bottom: 16px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      position: relative;
     }
+
+    .header-left {
+      display:flex;
+      align-items:center;
+      gap:12px;
+    }
+
     .title { font-weight: 800; letter-spacing: .5px; font-size: clamp(22px, 3vw, 34px); }
     .subtitle { color: var(--muted); font-size: 14px; }
 
-    .hud { display: grid; gap: 12px; grid-template-columns: 1fr; }
+    .hud { display: grid; gap: 12px; grid-template-columns: 1fr; flex: 1; }
     @media (min-width: 700px) { .hud { grid-template-columns: 1fr auto; } }
 
     .xpbar { background: #0a0d1a; border: 1px solid #2b3154; border-radius: 14px; padding: 10px 12px; box-shadow: 0 8px 30px rgba(0,0,0,.2) inset; }
@@ -49,12 +85,11 @@
       display: grid; grid-template-columns: 70px 1fr 110px 120px; gap: 10px; align-items: center; margin-top: 8px;
     }
     @media (max-width: 640px) { form.add { grid-template-columns: 60px 1fr 110px; } .hidden-mobile { display: none; } }
-    input, button, select {
+    input, button, select, textarea {
       height: 40px; border-radius: 10px; border: 1px solid #2b3154; background: #0b0f24; color: var(--text);
       padding: 0 12px; font-size: 14px; outline: none;
     }
-    input::placeholder { color: #738;
-      color: #7383aa; }
+    input::placeholder { color: #7383aa; }
     input[type="color"] { padding: 0; }
     button { cursor: pointer; border: 1px solid #334083; background: linear-gradient(180deg, #1a2150, #111640); box-shadow: 0 6px 16px rgba(15, 30, 80, .35); }
     button:hover { filter: brightness(1.1); }
@@ -85,25 +120,255 @@
     .right { text-align: right; }
 
     .row { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+
+    /* ------------------------------
+       Sidebar & Hamburger styles
+       ------------------------------ */
+    .hamburger {
+      width: 42px;
+      height: 36px;
+      display: inline-flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 6px;
+      padding: 6px;
+      cursor: pointer;
+      border-radius: 8px;
+      background: transparent;
+      border: 1px solid transparent;
+      transition: all .18s ease;
+    }
+    .hamburger:hover { background: rgba(255,255,255,0.03); border-color: rgba(255,255,255,0.03); }
+    .hamburger .bar {
+      display:block;
+      height:3px;
+      border-radius:3px;
+      background: var(--text);
+      width:22px;
+      transition: transform .22s ease, opacity .18s ease;
+    }
+    /* transform when active */
+    .hamburger.active .bar:nth-child(1) { transform: translateY(4px) rotate(45deg); }
+    .hamburger.active .bar:nth-child(2) { opacity: 0; transform: scaleX(.1); }
+    .hamburger.active .bar:nth-child(3) { transform: translateY(-4px) rotate(-45deg); }
+
+    .side-menu {
+      position: fixed;
+      top: 0;
+      left: -52%;
+      width: 50%;
+      max-width: 420px;
+      height: 100%;
+      background: linear-gradient(180deg,var(--card), rgba(17,18,32,0.98));
+      border-right: 1px solid rgba(43,49,84,0.6);
+      box-shadow: 10px 0 40px rgba(0,0,0,0.6);
+      padding: 20px;
+      z-index: 2200;
+      transition: left .38s cubic-bezier(.2,.9,.2,1);
+      display:flex;
+      flex-direction:column;
+    }
+    .side-menu.open { left: 0; }
+
+    /* overlay to dim content when menu open */
+    .menu-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.45);
+      z-index: 2100;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .3s ease;
+    }
+    .menu-overlay.show { opacity: 1; pointer-events: auto; }
+
+    .profile {
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:10px;
+      padding: 8px 0 18px;
+      border-bottom: 1px solid rgba(255,255,255,0.03);
+    }
+    .profile img {
+      width: 96px;
+      height: 96px;
+      border-radius: 999px;
+      object-fit: cover;
+      border: 3px solid rgba(255,255,255,0.06);
+      box-shadow: 0 6px 18px rgba(0,0,0,0.5);
+      cursor: pointer;
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.06));
+    }
+    .profile input[type="file"]{ display:none; }
+
+    .username {
+      font-size:18px;
+      font-weight:700;
+      color:var(--text);
+      cursor: text;
+      text-align:center;
+    }
+    .username-edit {
+      display:none;
+      width: 80%;
+      padding:8px;
+      border-radius:10px;
+      border: 1px solid rgba(255,255,255,0.06);
+      background: transparent;
+      color: var(--text);
+    }
+
+    .menu-buttons {
+      margin-top: 18px;
+      display:flex;
+      flex-direction:column;
+      gap: 10px;
+      padding: 8px 0;
+      flex:1;
+    }
+    .menu-btn {
+      width:100%;
+      text-align:left;
+      padding: 12px 14px;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.03);
+      color: var(--text);
+      cursor: pointer;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      transition: transform .12s ease, background .12s ease;
+    }
+    .menu-btn:hover { transform: translateY(-3px); background: rgba(255,255,255,0.03); }
+
+    /* theme toggle inside menu btn */
+    .toggle {
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+    }
+    .switch {
+      width:48px;
+      height:26px;
+      background: #ffffff;
+      border-radius: 30px;
+      position:relative;
+      border:2px solid #000;
+      box-sizing: border-box;
+      cursor:pointer;
+    }
+    .switch .knob {
+      position:absolute;
+      top:2px;
+      left:3px;
+      width:20px;
+      height:20px;
+      border-radius:50%;
+      background:#000;
+      transition: transform .22s ease, background .22s ease;
+    }
+    .switch.on { background:#000; border-color:#fff; }
+    .switch.on .knob { transform: translateX(22px); background:#fff; }
+
+    /* small helpers */
+    .small-muted { color: var(--muted); font-size: 13px; }
+    .menu-footer { margin-top:auto; padding-top:12px; border-top:1px solid rgba(255,255,255,0.02); display:flex; gap:8px; }
+
+    @media (max-width:680px) {
+      .side-menu { width: 82%; left: -86%; }
+      .side-menu.open { left:0; }
+    }
+
+    /* Force ALL dark panels to turn white in light mode */
+[data-theme="light"] .panel,
+[data-theme="light"] .xpbar,
+[data-theme="light"] .chip,
+[data-theme="light"] .streak,
+[data-theme="light"] .icon,
+/* Keep card white, but do NOT override the custom border color */
+[data-theme="light"] .card {
+  background: #ffffff;
+  box-shadow: var(--shadow);
+  border-color: inherit;  /* allows custom color */
+}
+
+/* Inputs & buttons */
+[data-theme="light"] input,
+[data-theme="light"] select,
+[data-theme="light"] textarea {
+  background: #ffffff !important;
+  border-color: var(--border) !important;
+  color: #000 !important;
+}
+
+[data-theme="light"] button {
+  background: #ffffff !important;
+  border-color: var(--border) !important;
+  color: #000 !important;
+  box-shadow: var(--shadow) !important;
+}
+
+/* Sidebar */
+[data-theme="light"] .side-menu {
+  background: #ffffff !important;
+  border-color: var(--border) !important;
+  box-shadow: var(--shadow) !important;
+}
+
+/* Menu buttons */
+[data-theme="light"] .menu-btn {
+  background: #ffffff !important;
+  border-color: var(--border) !important;
+  color: #000 !important;
+}
+
+#grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /* Exactly 2 cards each row */
+  gap: 20px;  /* Space between rows & columns */
+  margin-top: 20px;
+}
+
+
   </style>
+
+
 </head>
 <body>
   <div class="container">
     <header>
-      <div class="title">DailyQuest <span class="tiny">— Gamified Habit Tracker</span></div>
-      <div class="hud">
-        <div class="xpbar">
-          <div class="xpbar-top">
-            <div>Level <b id="level">1</b></div>
-            <div><span id="xp">0</span> XP • Next level in <span id="toNext">100</span> XP</div>
-          </div>
-          <div class="bar"><span id="xpFill"></span></div>
-          <div class="chips" id="badges"></div>
+      <div class="header-left">
+        <!-- Hamburger next to title (Option B) -->
+        <button id="hamburgerBtn" class="hamburger" aria-label="Open menu" title="Menu">
+          <span class="bar"></span>
+          <span class="bar"></span>
+          <span class="bar"></span>
+        </button>
+
+        <div>
+          <div class="title">DailyQuest <span class="tiny">— Gamified Habit Tracker</span></div>
         </div>
-        <div class="right">
-          <button id="exportBtn" class="ghost">Export backup</button>
-          <label for="importFile" class="ghost" style="display:inline-grid;place-items:center;padding:0 12px;height:40px;border-radius:10px;cursor:pointer;">Import backup</label>
-          <input id="importFile" type="file" accept="application/json" style="display:none" />
+      </div>
+
+      <div class="hud" style="flex:1; margin-left:12px;">
+        <div style="display:flex; gap:12px; align-items:center;">
+          <div class="xpbar" style="flex:1;">
+            <div class="xpbar-top">
+              <div>Level <b id="level">1</b></div>
+              <div><span id="xp">0</span> XP • Next level in <span id="toNext">100</span> XP</div>
+            </div>
+            <div class="bar"><span id="xpFill"></span></div>
+            <div class="chips" id="badges"></div>
+          </div>
+
+          <div class="right" style="display:flex; gap:8px; align-items:center;">
+            <button id="exportBtn" class="ghost">Export backup</button>
+            <label for="importFile" class="ghost" style="display:inline-grid;place-items:center;padding:0 12px;height:40px;border-radius:10px;cursor:pointer;">Import backup</label>
+            <input id="importFile" type="file" accept="application/json" style="display:none" />
+          </div>
         </div>
       </div>
     </header>
@@ -133,11 +398,234 @@
     <p class="tiny">Data is saved only on this device using localStorage. To sync across devices, export/import the backup JSON or connect a backend later.</p>
   </div>
 
+  <!-- Menu overlay -->
+  <div id="menuOverlay" class="menu-overlay" aria-hidden="true"></div>
+
+  <!-- Slide-in side menu -->
+  <aside id="sideMenu" class="side-menu" aria-hidden="true" role="dialog" aria-label="Main Menu">
+    <div class="profile">
+      <label for="profileUpload" title="Click to change profile picture">
+        <img id="profilePic" src="https://via.placeholder.com/160x160.png?text=DP" alt="Profile picture" />
+      </label>
+      <input id="profileUpload" type="file" accept="image/*" />
+
+      <div id="usernameText" class="username" tabindex="0" title="Click to edit name">Your name</div>
+      <input id="usernameEdit" class="username-edit" type="text" />
+      <div class="small-muted">Tap avatar to upload. Tap name to edit.</div>
+    </div>
+
+    <nav class="menu-buttons" aria-label="Menu options">
+      <button id="btnSettings" class="menu-btn">Settings</button>
+
+      <!-- Theme toggle row -->
+      <div class="menu-btn" style="align-items:center; justify-content:space-between;">
+        <div>
+          Dark / Light Theme
+        </div>
+        <div class="toggle" style="align-items:center;">
+          <div id="themeSwitch" class="switch" role="switch" aria-checked="false" title="Toggle theme">
+            <div class="knob"></div>
+          </div>
+        </div>
+      </div>
+
+      <button id="btnSupport" class="menu-btn">Customer Support</button>
+      <button id="menuLogout" class="menu-btn">Logout</button>
+      <button id="btnInvite" class="menu-btn">Invite Friend</button>
+    </nav>
+
+    <div class="menu-footer">
+      <button id="btnExport" class="menu-btn ghost" style="flex:1">Export</button>
+      <button id="btnImport" class="menu-btn ghost" style="flex:1">Import</button>
+    </div>
+  </aside>
+
   <script>
     // ---------- Utilities ----------
     const $ = (sel, root=document) => root.querySelector(sel);
     const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
 
+    // Profile + menu + theme persistence keys
+    const PROFILE_KEY = 'dq_profile_v1';
+    const THEME_KEY = 'dq_theme_v1';
+
+    // ---------- Sidebar interactions ----------
+    const hamburgerBtn = document.getElementById('hamburgerBtn');
+    const sideMenu = document.getElementById('sideMenu');
+    const menuOverlay = document.getElementById('menuOverlay');
+
+    function openMenu() {
+      sideMenu.classList.add('open');
+      hamburgerBtn.classList.add('active');
+      menuOverlay.classList.add('show');
+      sideMenu.setAttribute('aria-hidden', 'false');
+      menuOverlay.setAttribute('aria-hidden', 'false');
+    }
+    function closeMenu() {
+      sideMenu.classList.remove('open');
+      hamburgerBtn.classList.remove('active');
+      menuOverlay.classList.remove('show');
+      sideMenu.setAttribute('aria-hidden', 'true');
+      menuOverlay.setAttribute('aria-hidden', 'true');
+    }
+
+    hamburgerBtn.addEventListener('click', (e) => {
+      const open = sideMenu.classList.contains('open');
+      if (open) closeMenu(); else openMenu();
+    });
+    menuOverlay.addEventListener('click', closeMenu);
+    // close with ESC
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeMenu();
+    });
+
+    // ---------- Profile picture + name ----------
+    const profilePic = document.getElementById('profilePic');
+    const profileUpload = document.getElementById('profileUpload');
+    const usernameText = document.getElementById('usernameText');
+    const usernameEdit = document.getElementById('usernameEdit');
+
+    // load saved profile
+    function loadProfile() {
+      try {
+        const raw = localStorage.getItem(PROFILE_KEY);
+        if (!raw) return;
+        const obj = JSON.parse(raw);
+        if (obj.name) usernameText.textContent = obj.name;
+        if (obj.img) profilePic.src = obj.img;
+      } catch (err) { console.warn('Could not load profile', err); }
+    }
+    loadProfile();
+
+    profileUpload.addEventListener('change', (e) => {
+      const f = e.target.files?.[0];
+      if (!f) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        profilePic.src = reader.result;
+        saveProfile();
+      };
+      reader.readAsDataURL(f);
+    });
+
+    // click username -> edit
+    usernameText.addEventListener('click', () => {
+      usernameEdit.style.display = 'block';
+      usernameEdit.value = usernameText.textContent;
+      usernameText.style.display = 'none';
+      usernameEdit.focus();
+    });
+    usernameText.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        usernameText.click();
+        e.preventDefault();
+      }
+    });
+    usernameEdit.addEventListener('blur', () => {
+      const val = usernameEdit.value.trim() || 'Your name';
+      usernameText.textContent = val;
+      usernameText.style.display = 'block';
+      usernameEdit.style.display = 'none';
+      saveProfile();
+    });
+    usernameEdit.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        usernameEdit.blur();
+      }
+    });
+
+    function saveProfile() {
+      const obj = { name: usernameText.textContent, img: profilePic.src };
+      localStorage.setItem(PROFILE_KEY, JSON.stringify(obj));
+    }
+
+    // ---------- Theme toggle ----------
+    const themeSwitch = document.getElementById('themeSwitch');
+
+    function applyTheme(theme) {
+      if (theme === 'light') {
+        document.documentElement.setAttribute('data-theme', 'light');
+        themeSwitch.classList.add('on');
+        themeSwitch.setAttribute('aria-checked', 'true');
+      } else {
+        document.documentElement.removeAttribute('data-theme');
+        themeSwitch.classList.remove('on');
+        themeSwitch.setAttribute('aria-checked', 'false');
+      }
+      localStorage.setItem(THEME_KEY, theme || 'dark');
+    }
+
+    // load theme from storage
+    (function initTheme() {
+      const t = localStorage.getItem(THEME_KEY) || 'dark';
+      applyTheme(t === 'light' ? 'light' : 'dark');
+    })();
+
+    themeSwitch.addEventListener('click', () => {
+      const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+      applyTheme(isLight ? 'dark' : 'light');
+    });
+
+    // ---------- Menu buttons ----------
+    $('#btnSettings').addEventListener('click', () => {
+      alert('Settings clicked — implement settings panel here.');
+    });
+    $('#btnSupport').addEventListener('click', () => {
+      const supportUrl = 'mailto:support@example.com?subject=DailyQuest%20Support';
+      window.location.href = supportUrl;
+    });
+
+    // Invite friend: use Web Share API if possible, otherwise copy text
+    $('#btnInvite').addEventListener('click', async () => {
+      const shareText = 'Join me on DailyQuest — Gamified Habit Tracker! (your app link)';
+      if (navigator.share) {
+        try {
+          await navigator.share({ title: 'DailyQuest', text: shareText });
+        } catch (err) {
+          /* user cancelled or not available */
+        }
+      } else {
+        try {
+          await navigator.clipboard.writeText(shareText);
+          toast('Invite text copied to clipboard');
+        } catch (err) {
+          prompt('Copy this invite message:', shareText);
+        }
+      }
+    });
+
+    // export/import quick shortcuts in menu footer
+    $('#btnExport').addEventListener('click', () => $('#exportBtn').click());
+    $('#btnImport').addEventListener('click', () => $('#importFile').click());
+
+    // ---------- Logout (works with Firebase) ----------
+    const menuLogout = document.getElementById('menuLogout');
+    menuLogout.addEventListener('click', async () => {
+      // window.firebaseSignOut is exported by the firebase module script below.
+      if (window.firebaseSignOut) {
+        try {
+          await window.firebaseSignOut();
+        } catch (err) {
+          console.error('Logout failed', err);
+          alert('Logout failed. Try again.');
+        }
+      } else {
+        // fallback: redirect to auth.html (if you want a forced redirect)
+        // or show a message if auth not ready.
+        alert('Logout is not ready yet. Please try again in a moment.');
+      }
+    });
+
+    // ---------- Keep the rest of your app scripts (habits, storage etc.) ----------
+    // I will reuse your original app code below; to avoid duplication I place the rest of your code here.
+  </script>
+
+  <!-- ========== Existing app logic (modified to append here) ========== -->
+  <script>
+    // ---------- Utilities ----------
+    const $$2 = (sel, root=document) => Array.from(root.querySelectorAll(sel));
+    // Reuse small helpers from original script — but do not overwrite $
+    // ---------- helper date functions ----------
     function todayISO() {
       const d = new Date();
       d.setHours(0,0,0,0);
@@ -211,16 +699,17 @@
     }
 
     // ---------- Rendering ----------
-    const grid = $('#grid');
+    const grid = document.getElementById('grid');
     function render() {
       // HUD
-      $('#level').textContent = state.level;
-      $('#xp').textContent = state.xp;
+      document.getElementById('level').textContent = state.level;
+      document.getElementById('xp').textContent = state.xp;
       const toNext = 100 - (state.xp % 100);
-      $('#toNext').textContent = toNext === 100 ? 0 : toNext;
-      $('#xpFill').style.width = `${(state.xp % 100)}%`;
+      document.getElementById('toNext').textContent = toNext === 100 ? 0 : toNext;
+      document.getElementById('xpFill').style.width = `${(state.xp % 100)}%`;
       const badges = state.badges.map(b => `<span class="chip">🏅 ${b}</span>`).join('');
-      $('#badges').innerHTML = badges || '<span class="chip">No badges yet — let\'s earn some!</span>';
+      document.getElementById('badges').innerHTML =
+  badges || "<span class='chip'>No badges yet — let's earn some!</span>";
 
       // Habits
       if (!state.habits.length) {
@@ -254,19 +743,27 @@
       }).join('');
     }
 
-    function escapeHtml(str='') { return str.replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[s])); }
+    function escapeHtml(str = '') {
+  return String(str).replace(/[&<>"']/g, s => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  }[s]));
+}
 
     // ---------- Interactions ----------
-    $('#addForm').addEventListener('submit', (e) => {
+    document.getElementById('addForm').addEventListener('submit', (e) => {
       e.preventDefault();
-      const name = $('#name').value.trim();
+      const name = document.getElementById('name').value.trim();
       if (!name) return;
-      const icon = $('#icon').value.trim() || '🎯';
-      const color = $('#color').value || '#6c8bff';
+      const icon = document.getElementById('icon').value.trim() || '🎯';
+      const color = document.getElementById('color').value || '#6c8bff';
       const habit = { id: crypto.randomUUID(), name, icon, color, streak: 0, lastCompletedDate: null, completedToday: false };
       state.habits.unshift(habit);
       save();
-      $('#name').value = '';
+      document.getElementById('name').value = '';
       render();
       toast('Habit added ✓');
     });
@@ -313,15 +810,15 @@
       }
     });
 
-    $('#resetToday').addEventListener('click', () => {
-      if (!confirm('Reset today\'s completions for all habits?')) return;
-      for (const h of state.habits) h.completedToday = false;
+    document.getElementById('resetToday').addEventListener('click', () => {
+      if (!confirm("Reset today's completions for all habits?")) return;
+for (const h of state.habits) h.completedToday = false;
       save();
       render();
       toast("Today's completions reset");
     });
 
-    $('#clearAll').addEventListener('click', () => {
+    document.getElementById('clearAll').addEventListener('click', () => {
       if (!confirm('This will DELETE all your habits and progress. Continue?')) return;
       state = defaultState();
       save();
@@ -330,7 +827,7 @@
     });
 
     // Export/Import
-    $('#exportBtn').addEventListener('click', () => {
+    document.getElementById('exportBtn').addEventListener('click', () => {
       const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -339,7 +836,7 @@
       URL.revokeObjectURL(url);
     });
 
-    $('#importFile').addEventListener('change', (e) => {
+    document.getElementById('importFile').addEventListener('change', (e) => {
       const file = e.target.files?.[0]; if (!file) return;
       const reader = new FileReader();
       reader.onload = () => {
@@ -396,6 +893,53 @@
     // ---------- Init ----------
     rolloverIfNewDay();
     render();
+
+    // load profile if any (call the function defined earlier)
+    try { if (typeof loadProfile === 'function') loadProfile(); } catch(e){}
+
+  </script>
+
+  <!-- Firebase module script (auth) - export firebaseSignOut for menu -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAxKkJqDUwXYkNpbmwsiVhh9m2SSdfordI",
+      authDomain: "gamified-aut.firebaseapp.com",
+      projectId: "gamified-aut",
+      storageBucket: "gamified-aut.appspot.com",
+      messagingSenderId: "379085065815",
+      appId: "1:379085065815:web:f65123e48721b0967c9d12",
+      measurementId: "G-X0RLME6KG7"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    // bind to page: show user or redirect if no user
+    onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        // Not logged in → send to auth.html
+        window.location.href = "auth.html";
+      } else {
+        console.log("User logged in:", user.email);
+        // Optionally populate username area with user.displayName if available
+        try {
+          if (user.displayName && document.getElementById('usernameText').textContent === 'Your name') {
+            document.getElementById('usernameText').textContent = user.displayName;
+            // save profile (keep existing image)
+            if (typeof saveProfile === 'function') saveProfile();
+          }
+        } catch(e) {}
+      }
+    });
+
+    // export a helper for logout so menu's non-module code can call it
+    window.firebaseSignOut = async function() {
+      await signOut(auth);
+      window.location.href = "auth.html";
+    };
   </script>
 </body>
 </html>
