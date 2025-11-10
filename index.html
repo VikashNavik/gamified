@@ -571,13 +571,13 @@
       alert('Settings clicked — implement settings panel here.');
     });
     $('#btnSupport').addEventListener('click', () => {
-      const supportUrl = 'mailto:support@example.com?subject=DailyQuest%20Support';
+      const supportUrl = 'mailto:support@example.com?subject=DailyQuest%20Suppor';
       window.location.href = supportUrl;
     });
 
     // Invite friend: use Web Share API if possible, otherwise copy text
     $('#btnInvite').addEventListener('click', async () => {
-      const shareText = 'Join me on DailyQuest — Gamified Habit Tracker! (your app link)';
+      const shareText = 'Join me on DailyQuest — Gamified Habit Tracker! (https://vikashnavik.github.io/gamified/)';
       if (navigator.share) {
         try {
           await navigator.share({ title: 'DailyQuest', text: shareText });
@@ -898,48 +898,36 @@ for (const h of state.habits) h.completedToday = false;
     try { if (typeof loadProfile === 'function') loadProfile(); } catch(e){}
 
   </script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
 
-  <!-- Firebase module script (auth) - export firebaseSignOut for menu -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
-    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
+const firebaseConfig = {
+  apiKey: "AIzaSyAxKkJqDUwXYkNpbmwsiVhh9m2SSdfordI",
+  authDomain: "gamified-aut.firebaseapp.com",
+  projectId: "gamified-aut",
+  storageBucket: "gamified-aut.appspot.com",
+  messagingSenderId: "379085065815",
+  appId: "1:379085065815:web:f65123e48721b0967c9d12"
+};
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyAxKkJqDUwXYkNpbmwsiVhh9m2SSdfordI",
-      authDomain: "gamified-aut.firebaseapp.com",
-      projectId: "gamified-aut",
-      storageBucket: "gamified-aut.appspot.com",
-      messagingSenderId: "379085065815",
-      appId: "1:379085065815:web:f65123e48721b0967c9d12",
-      measurementId: "G-X0RLME6KG7"
-    };
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
+// ✅ Protect index.html
+onAuthStateChanged(auth, (user) => {
+  if (!user) {
+    window.location.replace("auth.html");
+  }
+});
 
-    // bind to page: show user or redirect if no user
-    onAuthStateChanged(auth, (user) => {
-      if (!user) {
-        // Not logged in → send to auth.html
-        window.location.href = "auth.html";
-      } else {
-        console.log("User logged in:", user.email);
-        // Optionally populate username area with user.displayName if available
-        try {
-          if (user.displayName && document.getElementById('usernameText').textContent === 'Your name') {
-            document.getElementById('usernameText').textContent = user.displayName;
-            // save profile (keep existing image)
-            if (typeof saveProfile === 'function') saveProfile();
-          }
-        } catch(e) {}
-      }
-    });
+// ✅ Logout function
+window.firebaseSignOut = async () => {
+  await signOut(auth);
+  window.location.replace("auth.html");
+};
+</script>
 
-    // export a helper for logout so menu's non-module code can call it
-    window.firebaseSignOut = async function() {
-      await signOut(auth);
-      window.location.href = "auth.html";
-    };
-  </script>
+
 </body>
 </html>

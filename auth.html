@@ -104,51 +104,28 @@
     <button id="logout-btn">Logout</button>
     <p id="user-display">No user logged in</p>
   </div>
+<script>
+const signupForm = document.getElementById("signup-form");
+const loginForm = document.getElementById("login-form");
+const formTitle = document.getElementById("form-title");
+const showLogin = document.getElementById("show-login");
+const showSignup = document.getElementById("show-signup");
 
-  <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
-  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
+showLogin.addEventListener("click", () => {
+  signupForm.style.display = "none";
+  loginForm.style.display = "block";
+  formTitle.textContent = "Login";
+});
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyAxKkJqDUwXYkNpbmwsiVhh9m2SSdfordI",
-    authDomain: "gamified-aut.firebaseapp.com",
-    projectId: "gamified-aut",
-    storageBucket: "gamified-aut.appspot.com",
-    messagingSenderId: "379085065815",
-    appId: "1:379085065815:web:f65123e48721b0967c9d12"
-  };
+showSignup.addEventListener("click", () => {
+  loginForm.style.display = "none";
+  signupForm.style.display = "block";
+  formTitle.textContent = "Sign Up";
+});
+</script>
 
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-
-  // 🔒 Protect page
-  onAuthStateChanged(auth, (user) => {
-    if (!user) {
-      window.location.href = "auth.html"; // redirect to login if not logged in
-    }
-  });
-
-    // Toggle between forms
-    const signupForm = document.getElementById("signup-form");
-    const loginForm = document.getElementById("login-form");
-    const formTitle = document.getElementById("form-title");
-    const showLogin = document.getElementById("show-login");
-    const showSignup = document.getElementById("show-signup");
-
-    showLogin.addEventListener("click", () => {
-      signupForm.style.display = "none";
-      loginForm.style.display = "block";
-      formTitle.textContent = "Login";
-    });
-
-    showSignup.addEventListener("click", () => {
-      loginForm.style.display = "none";
-      signupForm.style.display = "block";
-      formTitle.textContent = "Sign Up";
-    });
-  </script>
 
   <!-- Firebase Auth -->
-  <script type="module" src="./auth.js"></script>
+  <script type="module" src="./auth.js" defer></script>
 </body>
 </html>
