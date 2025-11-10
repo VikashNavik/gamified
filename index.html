@@ -331,103 +331,25 @@
   gap: 20px;  /* Space between rows & columns */
   margin-top: 20px;
 }
-
-/* ---------------- Responsive CSS (Mobile First) ---------------- */
-
-/* Base styles (for small devices by default) */
-.container {
-  padding: 12px;
-}
-
-form.add {
+/* Mobile first: 1 card per row */
+#grid {
   display: grid;
-  grid-template-columns: 48px 1fr;
-  gap: 8px;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  margin-top: 20px;
 }
 
-.card {
-  padding: 12px;
-}
-
-.title {
-  font-size: 20px;
-}
-
-.subtitle {
-  font-size: 12px;
-}
-
-.icon {
-  width: 40px;
-  height: 40px;
-}
-
-.complete {
-  width: 100%;
-}
-
-input, button {
-  font-size: 13px;
-}
-
-/* Medium devices (tablet) */
-@media(min-width: 481px) {
-  .container {
-    padding: 16px;
-  }
-
-  form.add {
-    grid-template-columns: 60px 1fr 100px;
-  }
-
-  .grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 16px;
-  }
-
-  .title {
-    font-size: 22px;
-  }
-
-  input, button {
-    font-size: 14px;
+/* Tablet: 2 cards per row */
+@media(min-width: 481px) and (max-width: 899px) {
+  #grid {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
-/* Large devices (desktop) */
-@media(min-width: 900px) {
-  .container {
-    padding: 18px;
-  }
-
-  form.add {
-    grid-template-columns: 70px 1fr 110px 120px;
-  }
-
-  .grid {
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 20px;
-  }
-
-  .title {
-    font-size: 24px;
-  }
-
-  input, button {
-    font-size: 15px;
-  }
-
-  .icon {
-    width: 50px;
-    height: 50px;
-  }
-}
+/* changes needed here for 1 slide or 2 */
 
 
-  </style>
-
-
+</style>
 </head>
 <body>
   <div class="container">
